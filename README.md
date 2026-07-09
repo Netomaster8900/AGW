@@ -34,3 +34,7 @@ que cualquier actualización en la GPU no provocará absolutamente ningún cambi
 
 absolutamente toda la API es monolítica, y en su mayoría es imposible de separar en módulos bien definidos al corto plazo, por
 lo que no se planea hacerlo
+
+## Notas:
+es necesario tener a SDL2, si se usa la macro correspondiente, fuera de la carpeta estándar(SDL/SDL2), o en su lugar, cambiar la ruta
+de inclusión que se usa dentro del código
