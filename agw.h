@@ -1,6 +1,6 @@
 //fecha oficial de version 1.0: 27/02/2026 | DD/MM/YYYY
 
-//version actual: 1.2.1 (version princial 1, 2 cambios añadidos, 1 en trabajos)
+// version actual: 1.3.0 (version princial 1, 3 cambios añadidos, 0 en trabajos)
 
 #include<windows.h>
 #include<vector>
@@ -12,6 +12,12 @@
 //#pragma comment(lib, "Ole32.lib")
 //#pragma comment(lib, "msimg32.lib")
 
+#ifdef precis
+#include <timeapi.h>
+#pragma comment(lib, "winmm.lib")
+#endif
+
+
 #ifdef SDL_2
 
 #define SDL_MAIN_HANDLED
@@ -19,6 +25,8 @@
 #pragma comment(lib, "SDL2.lib")
 
 #endif
+
+
 
 char func = 1;
 char cont = 0;
@@ -102,7 +110,7 @@ std::vector<char> atajos;
 
 int num_botones = 0;
 
-int regis_boton_ex(char atajo, char tipo, unsigned int x, unsigned int y, unsigned int ancho, unsigned int alto, void activo(void*), void desactivo(void*), void* arg_act, void* arg_suelt) {
+int regis_boton(char atajo, char tipo, unsigned int x, unsigned int y, unsigned int ancho, unsigned int alto, void activo(void*), void desactivo(void*), void* arg_act, void* arg_suelt) {
 	bot.push_back(x);
 	bot.push_back(y);
 	bot.push_back(x + ancho);
@@ -117,6 +125,20 @@ int regis_boton_ex(char atajo, char tipo, unsigned int x, unsigned int y, unsign
 	int b = num_botones;
 	num_botones++;
 	return b;
+}
+
+void mod_boton(int button_handler, char atajo, char tipo, unsigned int x, unsigned int y, unsigned int ancho, unsigned int alto, void activo(void*), void desactivo(void*), void* arg_act, void* arg_suelt) {
+	bot[button_handler * 4] = (x);
+	bot[button_handler * 4 + 1] = (y);
+	bot[button_handler * 4 + 2] = (x + ancho);
+	bot[button_handler * 4 + 3] = (y + alto);
+	funca[button_handler * 2] = (activo);
+	funca[button_handler * 2 + 1] = (desactivo);
+	tipos[button_handler] = (tipo);
+	args[button_handler * 2] = (arg_act);
+	args[button_handler * 2 + 1] = (arg_suelt);
+	hhhhq[button_handler] = (0);
+	atajos[button_handler] = (atajo);
 }
 
 void botones(int* buffer) {
@@ -283,13 +305,13 @@ void botones(int* buffer) {
 
 #ifdef SLDR
 
-#define SLID_VISIBLE  0b10000000///establece el tipo del valor en tiempo real como flotante de 32 bits
-#define SLID_INFO  0b01000000///establece el tipo del valor en tiempo real como entero sin signo de 32 bits
-#define SLID_HABILIT  0b00100000///establece el tipo del valor en tiempo real como entero sin signo de 64 bits
-#define SLID_ROJO  0b00010000///establece el tipo del valor en tiempo real como entero sin signo de 16 bits
-#define SLID_AZUL 0b00001000///establece el tipo del valor en tiempo real como entero con signo de 32 bits
-#define SLID_VERDE 0b00000100///establece el tipo del valor en tiempo real como entero con signo de 64 bits
-#define SLID_HORIZONTAL 0b00000010///establece el tipo del valor en tiempo real como entero con signo de 16 bits
+#define SLID_VISIBLE		0b10000000///
+#define SLID_INFO			0b01000000///
+#define SLID_HABILIT		0b00100000///
+#define SLID_ROJO			0b00010000///
+#define SLID_AZUL			0b00001000///
+#define SLID_VERDE			0b00000100///
+#define SLID_HORIZONTAL		0b00000010///
 
 std::vector<unsigned int> slid;
 std::vector<float*> vals;
@@ -301,21 +323,18 @@ std::vector<float> sumer;
 int num_sliders = 0;
 
 int regis_slider(char tipo_, int x, int y, int dx, int dy, float min, float max, float* val) {
-	y += 9;
-	dy -= 31;
-	dx -= 9;
 	slid.push_back(x);
 	slid.push_back(y);
-	slid.push_back(x + dx + 8);
-	slid.push_back(y + dy + 12);
+	slid.push_back(x + dx);
+	slid.push_back(y + dy);
 	tipo.push_back(tipo_);
 	rango.push_back(max);
 	rango.push_back(min);
-	pos.push_back(y + 4);
+	pos.push_back(y + 8);
 	if (tipo_ & SLID_HORIZONTAL) {
-		inver.push_back((max - min) / (dx));
+		inver.push_back((max - min) / (dx - 16));
 	}
-	else inver.push_back((max - min) / (dy));
+	else inver.push_back((max - min) / (dy - 16));
 	sumer.push_back(min);
 	vals.push_back(val);
 	int b = num_sliders;
@@ -323,20 +342,17 @@ int regis_slider(char tipo_, int x, int y, int dx, int dy, float min, float max,
 	return b;
 }
 void mod_slider(int slider_handle, char tipo_, int x, int y, int dx, int dy, float min, float max, float* val) {
-	y += 9;
-	dy -= 31;
-	dx -= 9;
 	slid[slider_handle * 4] = (x);
 	slid[slider_handle * 4 + 1] = (y);
-	slid[slider_handle * 4 + 2] = (x + dx + 8);
-	slid[slider_handle * 4 + 3] = (y + dy + 12);
+	slid[slider_handle * 4 + 2] = (x + dx);
+	slid[slider_handle * 4 + 3] = (y + dy);
 	tipo[slider_handle] = (tipo_);
 	rango[slider_handle * 2] = (max);
 	rango[slider_handle * 2 + 1] = (min);
-	pos[slider_handle] = y + 4;
+	pos[slider_handle] = y + 8;
 	if (tipo_ & SLID_HORIZONTAL) {
-		inver[slider_handle] = (max - min) / (dx);
-	} else inver[slider_handle] = (max - min) / (dy);
+		inver[slider_handle] = (max - min) / (dx - 16);
+	} else inver[slider_handle] = (max - min) / (dy - 16);
 	sumer[slider_handle] = min;
 	vals[slider_handle] = val;
 }
@@ -354,223 +370,201 @@ void sliders(int* buffer) {
 	int es = 0;
 	int q = 0;
 	for (int i = 0; i < n; i += 4) {
-		if (!(tipo[es] & SLID_VISIBLE)) {
-			es++;
-			q += 2;
-			continue;
-		}
 		if (tipo[es] & SLID_HORIZONTAL) {
-			if (tipo[es] & SLID_INFO) {
-				for (int x = (slid[i] - 5); x <= (slid[i + 2] + 5); x++) {
-					for (int y = (slid[i + 3] + 10); y <= (slid[i + 3] + 25); y++) {
-						if (y == (slid[i + 3] + 10) || x == (slid[i] - 5)) {
-							buffer[y * clase.tamaño_x + x] = 0x00000000;
-						}
-						else if (y == (slid[i + 3] + 25) || x == (slid[i + 2] + 5)) {
-							buffer[y * clase.tamaño_x + x] = 0x00F2F2F2;
-						}
-						else
-							buffer[y * clase.tamaño_x + x] = 0x00FFFFFF;
-					}
-				}
-				RECT rc = { slid[i] - 5, slid[i + 3] + 10, slid[i + 2] + 5, slid[i + 3] + 25 };
-				wchar_t buf[90] = {};
-				if ((*(vals[es])) < 0.1) {
-					swprintf(buf, L"%.1f m", (*(vals[es])) * 1000);
-				}
-				else
-					if ((*(vals[es])) < 1000) {
-						swprintf(buf, L"%.1f", (*(vals[es])));
-					}
-					else
-						if ((*(vals[es])) < 1000000) {
-							swprintf(buf, L"%.1f K", (*(vals[es])) * 0.001);
-						}
-						else
-							if ((*(vals[es])) < 1000000000) {
-								swprintf(buf, L"%.1f M", (*(vals[es])) * 0.000001);
+			if ((tipo[es] & SLID_VISIBLE)) {
+				if (tipo[es] & SLID_INFO) {
+					for (int y = slid[i + 3] + 2; y <= slid[i + 3] + 22; y++) {
+						for (int x = slid[i]; x <= slid[i] + 30; x++) {
+							if (x == slid[i] || y == slid[i + 3] + 2) {
+								buffer[y * clase.tamaño_x + x] = 0x00000000;
 							}
-				DrawTextW(dc_buffer, buf, -1, &rc, DT_END_ELLIPSIS | DT_CENTER);
-			}
-			for (int x = slid[i]; x <= slid[i + 2]; x++) {
-				for (int y = slid[i + 1] - 9; y <= slid[i + 3] + 9; y++) {
-					if (x == slid[i] || y == slid[i + 1] - 9) {
-						buffer[y * clase.tamaño_x + x] = 0x00FFFFFF;
+							else if (x == slid[i] + 30 || y == slid[i + 3] + 22) {
+								buffer[y * clase.tamaño_x + x] = 0x00E8E8E8;
+							}
+							else {
+								buffer[y * clase.tamaño_x + x] = 0x00FFFFFF;
+							}
+						}
 					}
-					else if (x == slid[i + 2] || y == slid[i + 3] + 9) {
-						buffer[y * clase.tamaño_x + x] = 0x007F7F7F;
-					}
-					else
-						buffer[y * clase.tamaño_x + x] = 0x00E1E1E1;
+					char bu[40] = "";
+					sprintf_s(bu, 40, "%.2f", vals[es][0]);
+					RECT rc = { slid[i], slid[i + 3] + 4, slid[i] + 30, slid[i + 3] + 22 };
+					DrawTextA(dc_buffer, bu, -1, &rc, DT_CENTER | DT_WORDBREAK | DT_END_ELLIPSIS);
 				}
-			}
-			for (int x = (slid[i] + 4); x <= (slid[i + 2] - 4); x++) {
-				for (int y = (slid[i + 1] - 4); y <= (slid[i + 3] + 5); y++) {
-					if (y == (slid[i + 3] + 5) || x == (slid[i + 2] - 4)) {
-						buffer[y * clase.tamaño_x + x] = 0x00FFFFFF;
-					}
-					else if (y == (slid[i + 1] - 4) || x == (slid[i] + 4)) {
-						buffer[y * clase.tamaño_x + x] = 0x007F7F7F;
-					}
-					else
-						buffer[y * clase.tamaño_x + x] = 0x00E1E1E1;
-				}
-			}
-			if (tipo[es] & SLID_VERDE) {
-				for (int x = pos[es] * 1.006; x <= (slid[i + 2] + 4); x++) {
-					for (int y = (slid[i + 1] + 5); y <= (slid[i + 3] - 5); y++) {
-						buffer[y * clase.tamaño_x + x] = 0x0000DF00;
-					}
-				}
-			}
-			if (tipo[es] & SLID_AZUL) {
-				for (int x = pos[es] * 1.006; x <= (slid[i + 2] + 4); x++) {
-					for (int y = (slid[i + 1] + 5); y <= (slid[i + 3] - 5); y++) {
-						buffer[y * clase.tamaño_x + x] = 0x000291ED;
-					}
-				}
-			}
-			if (tipo[es] & SLID_ROJO) {
-				for (int x = (slid[i] + 4); x <= pos[es] * 1.006; x++) {
-					for (int y = (slid[i + 1]); y <= (slid[i + 3]); y++) {
-						buffer[y * clase.tamaño_x + x] = 0x00E81824;
-					}
-				}
-			}
-			pos[es] = (slid[i + 2] - slid[i]) - (slid[i + 2] - slid[i]) * ((*(vals[es]) - sumer[es]) / (rango[q] - rango[q + 1])) + slid[i];
-			int x_ = pos.data()[es] - 4;
-			int x__ = pos.data()[es] + 4;
-			for (int x = x_; x <= x__; x++) {
 				for (int y = slid[i + 1]; y <= slid[i + 3]; y++) {
-					if (y == slid[i + 3] || x == x__) {
-						buffer[y * clase.tamaño_x + x] = 0x007F7F7F;
+					for (int x = slid[i]; x <= slid[i + 2]; x++) {
+						if (y == slid[i + 1] || x == slid[i]) {
+							buffer[y * clase.tamaño_x + x] = 0x00FFFFFF;
+						}
+						else if (y == slid[i + 3] || x == slid[i + 2]) {
+							buffer[y * clase.tamaño_x + x] = 0x007F7F7F;
+						}
+						else {
+							buffer[y * clase.tamaño_x + x] = 0x00E1E1E1;
+						}
 					}
-					else if (y == slid[i + 1] || x == x_) {
-						buffer[y * clase.tamaño_x + x] = 0x00FFFFFF;
+				}
+				for (int y = slid[i + 1] + 3; y <= slid[i + 3] - 3; y++) {
+					for (int x = slid[i] + 3; x <= slid[i + 2] - 3; x++) {
+						if (y == slid[i + 1] + 3 || x == slid[i] + 3) {
+							buffer[y * clase.tamaño_x + x] = 0x007F7F7F;
+						}
+						else if (y == slid[i + 3] - 3 || x == slid[i + 2] - 3) {
+							buffer[y * clase.tamaño_x + x] = 0x00FFFFFF;
+						}
+						else {
+							buffer[y * clase.tamaño_x + x] = 0x00E1E1E1;
+						}
 					}
-					else
-						buffer[y * clase.tamaño_x + x] = 0x00E1E1E1;
 				}
 			}
-			char dentro = pt.x > slid[i] && pt.y > slid[i + 1] && pt.x < slid[i + 2] && pt.y < slid[i + 3];
-			if (dentro) {
-				if (GetAsyncKeyState(VK_LBUTTON) & 0x8000) {
-					tipo[es] = tipo[es] | 0x01;
+			pos[es] = ((vals[es])[0] - (rango[q + 1])) / inver[es] + slid[i] + 8;
+			if ((tipo[es] & SLID_VISIBLE)) {
+				if ((tipo[es] & SLID_HABILIT)) {
+					if (tipo[es] & SLID_AZUL) {
+						for (int y = slid[i + 1] + 4; y <= slid[i + 3] - 4; y++) {
+							for (int x = slid[i] + 4; x <= pos[es]; x++) {
+								buffer[y * clase.tamaño_x + x] = 0x001788FF;
+							}
+						}
+					}
+					if (tipo[es] & SLID_VERDE) {
+						for (int y = slid[i + 1] + 4; y <= slid[i + 3] - 4; y++) {
+							for (int x = slid[i] + 4; x <= pos[es]; x++) {
+								buffer[y * clase.tamaño_x + x] = 0x0000F21F;
+							}
+						}
+					}
+					if (tipo[es] & SLID_ROJO) {
+						for (int y = slid[i + 1] + 4; y <= slid[i + 3] - 4; y++) {
+							for (int x = slid[i] + 4; x <= pos[es]; x++) {
+								buffer[y * clase.tamaño_x + x] = 0x00FF1815;
+							}
+						}
+					}
+				}
+				for (int y = slid[i + 1] + 4; y <= slid[i + 3] - 4; y++) {
+					for (int x = pos[es] - 4; x <= pos[es] + 4; x++) {
+						if (x == pos[es] - 4 || y == slid[i + 1] + 4) {
+							buffer[y * clase.tamaño_x + x] = 0x00FFFFFF;
+						}
+						else if (x == pos[es] + 4 || y == slid[i + 3] - 4) {
+							buffer[y * clase.tamaño_x + x] = 0x007F7F7F;
+						}
+						else {
+							buffer[y * clase.tamaño_x + x] = 0x00E1E1E1;
+						}
+					}
 				}
 			}
-			if (!(GetAsyncKeyState(VK_LBUTTON) & 0x8000)) {
-				tipo[es] = tipo[es] & 0xFE;
-			}
-			if (tipo[es] & 0x01) {
-				pos[es] = max(min(pt.x, slid[i + 2] - 8), slid[i + 1] + 5);
-				*(vals[es]) = rango[q] - ((pos[es] - (slid[i] + 4)) * inver[es]/* + sumer[es] */);
+			char dentro = pt.x > slid[i] + 4 && pt.x < slid[i + 2] - 4 && pt.y > slid[i + 1] + 4 && pt.y < slid[i + 3] - 4;
+			if ((tipo[es] & SLID_HABILIT)) {
+				if (GetAsyncKeyState(VK_LBUTTON) & 0x8000 && dentro) {
+					tipo[es] |= 0x1;
+				}
+				if (!(GetAsyncKeyState(VK_LBUTTON) & 0x8000) && tipo[es] & 0x1) {
+					tipo[es] &= (~0x01);
+				}
+				if (tipo[es] & 0x1) {
+					(vals[es])[0] = inver[es] * (min(max(pt.x, slid[i] + 8), slid[i + 2] - 8) - (slid[i] + 8)) + rango[q + 1];
+				}
 			}
 		}
 		else {
 			if (tipo[es] & SLID_INFO) {
-				for (int x = (slid[i] - 5); x <= (slid[i + 2] + 5); x++) {
-					for (int y = (slid[i + 3] + 10); y <= (slid[i + 3] + 25); y++) {
-						if (y == (slid[i + 3] + 10) || x == (slid[i] - 5)) {
+				for (int y = slid[i + 3] + 2; y <= slid[i + 3] + 22; y++) {
+					for (int x = slid[i]; x <= slid[i] + 30; x++) {
+						if (x == slid[i] || y == slid[i + 3] + 2) {
 							buffer[y * clase.tamaño_x + x] = 0x00000000;
 						}
-						else if (y == (slid[i + 3] + 25) || x == (slid[i + 2] + 5)) {
-							buffer[y * clase.tamaño_x + x] = 0x00F2F2F2;
+						else if (x == slid[i] + 30 || y == slid[i + 3] + 22) {
+							buffer[y * clase.tamaño_x + x] = 0x00E8E8E8;
 						}
-						else
+						else {
 							buffer[y * clase.tamaño_x + x] = 0x00FFFFFF;
-					}
-				}
-				RECT rc = { slid[i] - 5, slid[i + 3] + 10, slid[i + 2] + 5, slid[i + 3] + 25 };
-				wchar_t buf[90] = {};
-				if ((*(vals[es])) < 0.1) {
-					swprintf(buf, L"%.1f m", (*(vals[es])) * 1000);
-				}
-				else
-					if ((*(vals[es])) < 1000) {
-						swprintf(buf, L"%.1f", (*(vals[es])));
-					}
-					else
-						if ((*(vals[es])) < 1000000) {
-							swprintf(buf, L"%.1f K", (*(vals[es])) * 0.001);
 						}
-						else
-							if ((*(vals[es])) < 1000000000) {
-								swprintf(buf, L"%.1f M", (*(vals[es])) * 0.000001);
-							}
-				DrawTextW(dc_buffer, buf, -1, &rc, DT_END_ELLIPSIS | DT_CENTER);
+					}
+				}
+				char bu[40] = "";
+				sprintf_s(bu, 40, "%.2f", vals[es][0]);
+				RECT rc = { slid[i], slid[i + 3] + 4, slid[i] + 30, slid[i + 3] + 22 };
+				DrawTextA(dc_buffer, bu, -1, &rc, DT_CENTER | DT_WORDBREAK | DT_END_ELLIPSIS);
 			}
-			for (int x = slid[i]; x <= slid[i + 2]; x++) {
-				for (int y = slid[i + 1] - 9; y <= slid[i + 3] + 9; y++) {
-					if (x == slid[i] || y == slid[i + 1] - 9) {
+			for (int y = slid[i + 1]; y <= slid[i + 3]; y++) {
+				for (int x = slid[i]; x <= slid[i + 2]; x++) {
+					if (y == slid[i + 1] || x == slid[i]) {
 						buffer[y * clase.tamaño_x + x] = 0x00FFFFFF;
 					}
-					else if (x == slid[i + 2] || y == slid[i + 3] + 9) {
+					else if (y == slid[i + 3] || x == slid[i + 2]) {
 						buffer[y * clase.tamaño_x + x] = 0x007F7F7F;
 					}
-					else
+					else {
 						buffer[y * clase.tamaño_x + x] = 0x00E1E1E1;
+					}
 				}
 			}
-			for (int x = (slid[i] + 4); x <= (slid[i + 2] - 4); x++) {
-				for (int y = (slid[i + 1] - 4); y <= (slid[i + 3] + 5); y++) {
-					if (y == (slid[i + 3] + 5) || x == (slid[i + 2] - 4)) {
+			for (int y = slid[i + 1] + 3; y <= slid[i + 3] - 3; y++) {
+				for (int x = slid[i] + 3; x <= slid[i + 2] - 3; x++) {
+					if (y == slid[i + 1] + 3 || x == slid[i] + 3) {
+						buffer[y * clase.tamaño_x + x] = 0x007F7F7F;
+					}
+					else if (y == slid[i + 3] - 3 || x == slid[i + 2] - 3) {
 						buffer[y * clase.tamaño_x + x] = 0x00FFFFFF;
 					}
-					else if (y == (slid[i + 1] - 4) || x == (slid[i] + 4)) {
-						buffer[y * clase.tamaño_x + x] = 0x007F7F7F;
-					}
-					else
+					else {
 						buffer[y * clase.tamaño_x + x] = 0x00E1E1E1;
-				}
-			}
-			if (tipo[es] & SLID_VERDE) {
-				for (int x = (slid[i] + 5); x <= (slid[i + 2] - 5); x++) {
-					for (int y = pos[es] * 1.006; y <= (slid[i + 3] + 4); y++) {
-						buffer[y * clase.tamaño_x + x] = 0x0000DF00;
 					}
 				}
 			}
-			if (tipo[es] & SLID_AZUL) {
-				for (int x = (slid[i] + 5); x <= (slid[i + 2] - 5); x++) {
-					for (int y = pos[es] * 1.006; y <= (slid[i + 3] + 4); y++) {
-						buffer[y * clase.tamaño_x + x] = 0x000291ED;
+			pos[es] = ((rango[q]) - (vals[es])[0]) / inver[es] + slid[i + 1] + 8;
+
+			if ((tipo[es] & SLID_HABILIT)) {
+				if (tipo[es] & SLID_AZUL) {
+					for (int y = slid[i + 3] - 4; y > pos[es]; y--) {
+						for (int x = slid[i] + 4; x <= slid[i + 2] - 4; x++) {
+							buffer[y * clase.tamaño_x + x] = 0x001788FF;
+						}
+					}
+				}
+				if (tipo[es] & SLID_VERDE) {
+					for (int y = slid[i + 3] - 4; y > pos[es]; y--) {
+						for (int x = slid[i] + 4; x <= slid[i + 2] - 4; x++) {
+							buffer[y * clase.tamaño_x + x] = 0x0000F21F;
+						}
+					}
+				}
+				if (tipo[es] & SLID_ROJO) {
+					for (int y = slid[i + 3] - 4; y > pos[es]; y--) {
+						for (int x = slid[i] + 4; x <= slid[i + 2] - 4; x++) {
+							buffer[y * clase.tamaño_x + x] = 0x00FF3815;
+						}
 					}
 				}
 			}
-			if (tipo[es] & SLID_ROJO) {
-				for (int x = (slid[i] + 5); x <= (slid[i + 2] - 5); x++) {
-					for (int y = pos[es] * 1.006; y <= (slid[i + 3] + 4); y++) {
-						buffer[y * clase.tamaño_x + x] = 0x00E81824;
-					}
-				}
-			}
-			pos[es] = (slid[i + 3] - slid[i + 1]) - (slid[i + 3] - slid[i + 1]) * ((*(vals[es]) - sumer[es]) / (rango[q] - rango[q + 1])) + slid[i + 1];
-			int y_ = pos.data()[es] - 4;
-			int y__ = pos.data()[es] + 4;
-			for (int x = slid[i] + 5; x <= slid[i + 2] - 5; x++) {
-				for (int y = y_; y <= y__; y++) {
-					if (y == y__ || x == slid[i + 2] - 5) {
-						buffer[y * clase.tamaño_x + x] = 0x007F7F7F;
-					}
-					else if (y == y_ || x == slid[i] + 5) {
+			for (int y = pos[es] - 4; y <= pos[es] + 4; y++) {
+				for (int x = slid[i] + 4; x <= slid[i + 2] - 4; x++) {
+					if (x == slid[i] + 4 || y == pos[es] - 4) {
 						buffer[y * clase.tamaño_x + x] = 0x00FFFFFF;
 					}
-					else
+					else if (x == slid[i + 2] - 4 || y == pos[es] + 4) {
+						buffer[y * clase.tamaño_x + x] = 0x007F7F7F;
+					}
+					else {
 						buffer[y * clase.tamaño_x + x] = 0x00E1E1E1;
+					}
 				}
 			}
-			char dentro = pt.x > slid[i] && pt.y > slid[i + 1] && pt.x < slid[i + 2] && pt.y < slid[i + 3];
-			if (dentro) {
-				if (GetAsyncKeyState(VK_LBUTTON) & 0x8000) {
-					tipo[es] = tipo[es] | 0x01;
+			if ((tipo[es] & SLID_HABILIT)) {
+				char dentro = pt.x > slid[i] + 4 && pt.x < slid[i + 2] - 4 && pt.y > slid[i + 1] + 4 && pt.y < slid[i + 3] - 4;
+				if (GetAsyncKeyState(VK_LBUTTON) & 0x8000 && dentro) {
+					tipo[es] |= 0x1;
 				}
-			}
-			if (!(GetAsyncKeyState(VK_LBUTTON) & 0x8000)) {
-				tipo[es] = tipo[es] & 0xFE;
-			}
-			if (tipo[es] & 0x01) {
-				pos[es] = max(min(pt.y, slid[i + 3] - 8), slid[i + 1] + 5);
-				*(vals[es]) = rango[q] - ((pos[es] - (slid[i + 1] + 4)) * inver[es]/* + sumer[es] */);
+				if (!(GetAsyncKeyState(VK_LBUTTON) & 0x8000) && tipo[es] & 0x1) {
+					tipo[es] &= (~0x01);
+				}
+				if (tipo[es] & 0x1) {
+					(vals[es])[0] = rango[q] - inver[es] * (min(max(pt.y, slid[i + 1] + 8), slid[i + 3] - 8) - (slid[i + 1] + 8));
+				}
 			}
 		}
 		es++;
@@ -791,9 +785,9 @@ DWORD WINAPI tercero(void* param) {
 		QueryPerformanceCounter(&tiempo1);
 		long long retraso = tiempo1.QuadPart - tiempo.QuadPart;
 		t2 = retraso;
-		if ((retraso / (double)ciclos.QuadPart) < 0.033) {
+		if ((retraso / (double)ciclos.QuadPart) < 0.016) {
 			QueryPerformanceCounter(&tiempo1);
-			Sleep(abs(33 - ((tiempo1.QuadPart - tiempo.QuadPart) / (ciclos.QuadPart / 1000))));
+			Sleep(abs(15 - ((tiempo1.QuadPart - tiempo.QuadPart) / (ciclos.QuadPart / 1000))));
 			QueryPerformanceCounter(&tiempo);
 		}
 		else {
@@ -855,14 +849,14 @@ DWORD WINAPI segundo(void* param) {
 		QueryPerformanceCounter(&tiempo1);
 		long long retraso = tiempo1.QuadPart - tiempo.QuadPart;
 		t1 = retraso;
-		if ((retraso / (double)ciclos.QuadPart) < 0.033) {
+		if ((retraso / (double)ciclos.QuadPart) < 0.016) {
 			if (PeekMessage(&msg, ventana_s, 0, 0, PM_REMOVE)) {
 				TranslateMessage(&msg);
 				DispatchMessageW(&msg);
 			}
 			BitBlt(hdc, 0, 0, clase.tamaño_x, clase.tamaño_y, dc_buffer, 0, 0, SRCCOPY);
 			QueryPerformanceCounter(&tiempo1);
-			Sleep(abs(33 - ((tiempo1.QuadPart - tiempo.QuadPart) / (ciclos.QuadPart / 1000))));
+			Sleep(abs(15 - ((tiempo1.QuadPart - tiempo.QuadPart) / ((double)ciclos.QuadPart / 1000.0))));
 			QueryPerformanceCounter(&tiempo);
 		}
 		else {
@@ -883,6 +877,9 @@ int WINAPI WinMain(HINSTANCE hinstance, HINSTANCE NA, LPSTR cmdline, int showcmd
 
 	if (setup(&clase)) {
 		if (clase.tamaño_x && clase.titulo) {
+#ifdef precis
+			timeBeginPeriod(1);
+#endif
 			icono = CreateIcon(hinstance, 11, 11, 1, 32, (BYTE*)(&AND[0]), (BYTE*)(&XOR[0]));
 			cursor = CreateCursor(hinstance, 0, 0, 11, 11, (BYTE*)(&AND[0]), (BYTE*)(&XOR[0]));
 			WNDCLASSW clas = {};
